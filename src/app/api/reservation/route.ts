@@ -91,6 +91,10 @@ export async function POST(req: Request) {
     .footer { padding: 18px 28px 26px; color: #475569; font-size: 13px; }
     .signature { margin-top: 10px; line-height: 1.4; color: #334155; }
     a { color: #2563eb; text-decoration: none; }
+    .actions { margin-top: 16px; display: flex; gap: 12px; }
+    .btn { display: inline-block; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; }
+    .btn--confirm { background: #16a34a; color: #ffffff; }
+    .btn--cancel { background: #dc2626; color: #ffffff; }
   </style>
   </head>
   <body>
@@ -143,6 +147,11 @@ export async function POST(req: Request) {
             <div class="label">Total</div>
             <div class="value">${totalAmount}</div>
           </div>
+        </div>
+
+        <div class="actions">
+          <a class="btn btn--confirm" href="https://presidentialserviceapartments.ng/reservation?action=confirm">Confirm Reservation</a>
+          <a class="btn btn--cancel" href="https://presidentialserviceapartments.ng/reservation?action=cancel">Cancel Reservation</a>
         </div>
 
         ${
