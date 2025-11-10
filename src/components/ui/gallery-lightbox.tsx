@@ -50,7 +50,7 @@ export function GalleryLightbox({
   return (
     items.length > 0 && (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="bg-black/90 border-none p-0 w-[95vw] max-w-5xl">
+        <DialogContent className="bg-black/90 border-none p-0 w-[95vw] max-w-6xl">
           {index !== null && (
             <div className="relative w-full">
               <div className="relative w-full h-[80vh] flex items-center justify-center bg-black">

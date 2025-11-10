@@ -2,6 +2,14 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { useState } from 'react';
 import { Apartment } from '@/models/apartment';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +55,28 @@ export default function ApartmentDetailsPage({
             className='object-cover'
             priority
           />
+          {/* Breadcrumb overlay */}
+          <div className='absolute top-4 left-6 right-6 '>
+            <Breadcrumb className='w-fit p-4 rounded-full border border-white/20 bg-white/10 backdrop-blur supports-[backdrop-filter]:bg-white/10 shadow-lg'>
+              <BreadcrumbList className='text-white/85'>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link href='/'>Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link href='/apartments'>Apartments</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage className='text-primary'>{apartment.name}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
         </div>
       )}
 
@@ -181,7 +211,7 @@ export default function ApartmentDetailsPage({
                 apartments={[apartment]}
                 showApartmentSelect={false}
                 layout='vertical'
-                className='rounded-2xl'
+                className='md:rounded-2xl'
               />
             </CardContent>
           </Card>

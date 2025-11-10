@@ -19,8 +19,8 @@ export default function HeroSection() {
 
       {/* Header moved to shared component. */}
 
-      <div className='relative z-10 flex h-[calc(100vh-88px)] flex-col items-center justify-center px-8 text-center'>
-        <h1 className='max-w-4xl text-5xl md:text-7xl font-bold text-white leading-tight mb-12'>
+      <div className='relative z-10 flex h-[calc(100vh-18px)] flex-col items-center justify-center px-8 mt-24 text-center'>
+        <h1 className='max-w-4xl text-5xl md:text-7xl font-bold text-white mb-12'>
           A Better Life Starts with the Right Home
         </h1>
         <p className='max-w-2xl text-lg md:text-xl text-white/90 mb-10'>

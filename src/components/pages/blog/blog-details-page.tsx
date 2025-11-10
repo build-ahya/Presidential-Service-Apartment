@@ -5,6 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,10 +59,10 @@ export default function BlogDetailsPage({ post }: { post: Post }) {
   };
 
   return (
-    <section className="min-h-screen bg-white">
+    <section className="container mx-auto px-4 py-8 space-y-8 my-20">
       {/* Hero */}
       {post.featuredMedia?.url && (
-        <div className="relative h-64 w-full">
+        <div className="relative mx-auto container h-64 md:h-96 rounded-xl overflow-hidden border">
           <Image
             src={post.featuredMedia.url}
             alt={post.featuredMedia.alt || post.title}
@@ -63,6 +71,28 @@ export default function BlogDetailsPage({ post }: { post: Post }) {
             priority
           />
           <div className="absolute inset-0 bg-black/30" />
+          {/* Breadcrumb overlay */}
+          <div className="absolute top-4 left-6 right-6">
+            <Breadcrumb>
+              <BreadcrumbList className="text-white/85">
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link href="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link href="/blog">Blog</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="text-primary">{post.title}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
           <div className="absolute bottom-4 left-6 right-6">
             <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow">
               {post.title}

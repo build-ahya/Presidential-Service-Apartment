@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { useAppSelector } from '@/store/hooks';
 import { MediaCarousel } from '@/components/ui/media-carousel';
 import { Badge } from '@/components/ui/badge';
+import { GalleryLightbox } from '@/components/ui/gallery-lightbox';
 
 export default function FeaturesSection() {
   const {
@@ -30,6 +31,14 @@ export default function FeaturesSection() {
       caption?: string;
     }>
   >([]);
+
+  // Safely derive a city/state label from the first apartment that has it
+  const firstAddress = apartments.find(
+    (a) => a?.location?.address?.city && a?.location?.address?.state
+  )?.location?.address;
+  const locationLabel = firstAddress
+    ? `${firstAddress.city}, ${firstAddress.state}`
+    : null;
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % apartments.length);
@@ -52,10 +61,12 @@ export default function FeaturesSection() {
             Find everything from cozy apartments to spacious family homes
             tailored to fit your lifestyle.
           </p>
-          <div className='flex items-center justify-center gap-2 text-gray-700'>
-            <MapPin className='h-5 w-5' />
-            <span className='font-medium'>{`${apartments[0].location.address.city}, ${apartments[0].location.address.state}`}</span>
-          </div>
+          {locationLabel && (
+            <div className='flex items-center justify-center gap-2 text-gray-700'>
+              <MapPin className='h-5 w-5' />
+              <span className='font-medium'>{locationLabel}</span>
+            </div>
+          )}
         </div>
 
         <div className='relative'>
@@ -149,6 +160,33 @@ export default function FeaturesSection() {
           </div>
         </div>
       </div>
+
+      {/* Lightbox */}
+      {lightboxItems.length > 0 && (
+        <GalleryLightbox
+          items={lightboxItems}
+          open={lightboxOpen}
+          index={activeIndex}
+          onOpenChange={(o) => {
+            setLightboxOpen(o);
+            if (!o) setActiveIndex(null);
+          }}
+          onPrev={() =>
+            setActiveIndex((prev) => {
+              const len = lightboxItems.length;
+              const i = typeof prev === 'number' ? prev : 0;
+              return (i - 1 + len) % len;
+            })
+          }
+          onNext={() =>
+            setActiveIndex((prev) => {
+              const len = lightboxItems.length;
+              const i = typeof prev === 'number' ? prev : 0;
+              return (i + 1) % len;
+            })
+          }
+        />
+      )}
     </section>
   );
 }
