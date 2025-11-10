@@ -145,9 +145,15 @@ export default function PublicHeader() {
 
           {/* Mobile Menu Trigger */}
           <div className="md:hidden">
-            <Drawer open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <Drawer open={isMenuOpen} onOpenChange={setIsMenuOpen} direction='bottom'>
               <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    isHome ? (scrolledPastViewport ? 'text-black' : 'text-white') : 'text-black'
+                  )}
+                >
                   <Menu className="h-6 w-6" />
                 </Button>
               </DrawerTrigger>

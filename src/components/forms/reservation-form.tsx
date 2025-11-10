@@ -5,7 +5,14 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
@@ -35,7 +42,11 @@ export type ReservationFormProps = {
   onCancel?: () => void;
 };
 
-export default function ReservationForm({ initial, onSuccess, onCancel }: ReservationFormProps) {
+export default function ReservationForm({
+  initial,
+  onSuccess,
+  onCancel,
+}: ReservationFormProps) {
   const form = useForm<ReservationFormInput, any, ReservationFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -105,7 +116,11 @@ export default function ReservationForm({ initial, onSuccess, onCancel }: Reserv
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type='email' placeholder='john@example.com' {...field} />
+                  <Input
+                    type='email'
+                    placeholder='john@example.com'
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -134,8 +149,14 @@ export default function ReservationForm({ initial, onSuccess, onCancel }: Reserv
                   <Input
                     type='number'
                     min={1}
-                    value={typeof field.value === 'number' ? field.value : Number(field.value ?? 1)}
-                    onChange={(e) => field.onChange(e.currentTarget.valueAsNumber)}
+                    value={
+                      typeof field.value === 'number'
+                        ? field.value
+                        : Number(field.value ?? 1)
+                    }
+                    onChange={(e) =>
+                      field.onChange(e.currentTarget.valueAsNumber)
+                    }
                     onBlur={field.onBlur}
                     name={field.name}
                     ref={field.ref}
@@ -183,7 +204,11 @@ export default function ReservationForm({ initial, onSuccess, onCancel }: Reserv
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea rows={3} placeholder='Special requests or notes' {...field} />
+                <Textarea
+                  rows={3}
+                  placeholder='Special requests or notes'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -194,14 +219,14 @@ export default function ReservationForm({ initial, onSuccess, onCancel }: Reserv
         <FormField<ReservationFormInput, 'apartmentId'>
           control={form.control}
           name='apartmentId'
-          render={({ field }) => (
-            <Input type='hidden' {...field} />
-          )}
+          render={({ field }) => <Input type='hidden' {...field} />}
         />
 
         <div className='flex items-center justify-end gap-2'>
-          <Button type='button' variant='ghost' onClick={onCancel}>Cancel</Button>
-          <Button type='submit' disabled={submitting}>
+          <Button type='button' variant='ghost' onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type='submit' loading={submitting} disabled={submitting}>
             {submitting ? 'Submitting...' : 'Confirm Reservation'}
           </Button>
         </div>

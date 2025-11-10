@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
+// Slot removed from asChild path to avoid type issues when injecting props
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -41,19 +41,68 @@ function Button({
   variant,
   size,
   asChild = false,
+  loading = false,
+  disabled,
+  children,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    loading?: boolean
   }) {
-  const Comp = asChild ? Slot : "button"
+  const isDisabled = !!disabled || !!loading
+
+  if (asChild) {
+    // Ensure a single React element child and inject props safely
+    const onlyChild = React.Children.only(children as React.ReactElement<any>)
+    const content = loading ? (
+      <>
+        <span
+          className="inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"
+          aria-hidden="true"
+        />
+        {onlyChild.props?.children}
+      </>
+    ) : (
+      onlyChild.props?.children
+    )
+
+    const mergedClassName = cn(
+      buttonVariants({ variant, size, className }),
+      (onlyChild.props as any)?.className
+    )
+
+    const childProps: any = {
+      className: mergedClassName,
+      'aria-busy': loading || undefined,
+      'aria-disabled': isDisabled || undefined,
+      ...props,
+    }
+
+    // Apply disabled only if the underlying element is a native button
+    if (typeof onlyChild.type === 'string' && onlyChild.type === 'button') {
+      childProps.disabled = isDisabled
+    }
+
+    return React.cloneElement(onlyChild, childProps, content)
+  }
 
   return (
-    <Comp
+    <button
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      aria-busy={loading || undefined}
+      disabled={isDisabled}
       {...props}
-    />
+    >
+      {loading && (
+        <span
+          className="inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"
+          aria-hidden="true"
+        />
+      )}
+      {children}
+    </button>
   )
 }
 

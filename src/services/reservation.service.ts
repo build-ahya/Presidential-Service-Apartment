@@ -11,7 +11,8 @@ import {
   where,
   orderBy,
 } from 'firebase/firestore';
-import type { Reservation } from '@/models/reservation';
+import type { Reservation, ReservationStatus } from '@/models/reservation';
+import { ApartmentService } from '@/services/apartment.service';
 
 
 function toISO(date: Date | string | number | undefined): string | undefined {
@@ -120,22 +121,28 @@ export class ReservationService {
 
   static async checkAvailability(params: {
     apartmentId?: string;
-    roomId?: string;
     checkIn: string;
     checkOut: string;
   }): Promise<{ available: boolean; conflicts: Reservation[] }> {
-    const { apartmentId, roomId, checkIn, checkOut } = params;
-    // fetch all reservations and filter by apartment/room
+    const { apartmentId, checkIn, checkOut } = params;
+    // fetch all reservations
     const col = collection(db, RESERVATION_COLLECTION);
     const snapshot = await getDocs(col);
     const all = snapshot.docs.map((d) => ({ ...(d.data() as Omit<Reservation, 'id'>), id: d.id }));
-    const scoped = all.filter((r) => {
-      if (roomId) return r.roomId === roomId;
-      if (apartmentId) return r.apartmentId === apartmentId;
-      return true;
-    });
+    
+    // Determine apartment-level scope. For shortlet, booking covers the entire apartment.
+    const targetApartmentId: string | undefined = apartmentId;
 
-    const conflicts = scoped.filter((r) => overlaps(r.checkIn, r.checkOut, checkIn, checkOut));
+    const ACTIVE_STATUSES: ReservationStatus[] = ['confirmed'];
+
+    const scoped = targetApartmentId
+      ? all.filter((r) => r.apartmentId === targetApartmentId)
+      : all;
+
+    // Only treat confirmed reservations as conflicts; pending/cancelled/completed should not block.
+    const conflicts = scoped.filter(
+      (r) => ACTIVE_STATUSES.includes(r.status) && overlaps(r.checkIn, r.checkOut, checkIn, checkOut)
+    );
     const available = conflicts.length === 0;
     return { available, conflicts };
   }

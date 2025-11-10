@@ -94,12 +94,13 @@ export function CheckAvailabilityForm({ apartments = [], showApartmentSelect = t
         guests,
       };
       const qStr = encodeURIComponent(JSON.stringify(qData));
-
-      if (isOutsideApartments) {
+      // When on apartments list (or outside apartments), update URL with q so the list reacts.
+      if (isOutsideApartments || isApartmentsList) {
         router.push(`/apartments?q=${qStr}`);
         return;
       }
 
+      // On apartment details, check availability for the specific apt and show reservation dialog on success.
       const res = await fetch(`/api/reservation/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -178,7 +179,7 @@ export function CheckAvailabilityForm({ apartments = [], showApartmentSelect = t
             type='date'
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className='border-0 shadow-none focus:ring-0 bg-transparent text-sm h-9 px-0'
+            className='border-0 shadow-none focus:ring-0 bg-transparent text-sm h-9 px-0 w-full'
             required
           />
         </div>
@@ -191,7 +192,7 @@ export function CheckAvailabilityForm({ apartments = [], showApartmentSelect = t
             type='date'
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
-            className='border-0 shadow-none focus:ring-0 bg-transparent text-sm h-9 px-0'
+            className='border-0 shadow-none focus:ring-0 bg-transparent text-sm h-9 px-0 w-full'
             required
           />
         </div>
@@ -201,7 +202,7 @@ export function CheckAvailabilityForm({ apartments = [], showApartmentSelect = t
         <div className={`flex items-center gap-2 ${guestsBasisClass}`}>
           <Users className='h-5 w-5 text-gray-600' />
           <Select value={String(guests)} onValueChange={(v) => setGuests(Number(v))}>
-            <SelectTrigger className='border-0 shadow-none focus:ring-0 bg-transparent text-sm h-9 px-0'>
+            <SelectTrigger className='border-0 shadow-none focus:ring-0 bg-transparent text-sm h-9 px-0 w-full'>
               <SelectValue placeholder='Guests' />
             </SelectTrigger>
             <SelectContent>
@@ -214,7 +215,7 @@ export function CheckAvailabilityForm({ apartments = [], showApartmentSelect = t
           </Select>
         </div>
 
-        <Button size='lg' type='submit' disabled={submitting}>
+        <Button size='lg' type='submit' loading={submitting} disabled={submitting}>
           {submitting
             ? 'Checking...'
             : (isApartmentDetails && ((preCheckedAvailable && (checkIn && checkOut)) || status?.available)

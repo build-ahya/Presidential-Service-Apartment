@@ -74,7 +74,8 @@ export default function ApartmentsPage() {
               }),
             });
             const json = await res.json();
-            return json?.available ? apt : null;
+            const hasConflicts = Array.isArray(json?.conflicts) && json.conflicts.length > 0;
+            return hasConflicts ? null : apt;
           } catch {
             return null;
           }
@@ -123,10 +124,23 @@ export default function ApartmentsPage() {
         )}
       </div>
 
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {(visibleApartments || apartments).map((apt) => (
-          <Link href={`/apartments/${apt.slug}${q ? `?q=${q}` : ''}`}>
-            <Card key={apt.id} className='overflow-hidden'>
+      {qData && qData.checkIn && qData.checkOut && visibleApartments && visibleApartments.length === 0 ? (
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>No apartments match these dates</EmptyTitle>
+            <EmptyDescription>
+              Try adjusting your check-in/check-out or browse all apartments below.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {((qData && qData.checkIn && qData.checkOut && visibleApartments && visibleApartments.length > 0)
+            ? visibleApartments
+            : apartments
+          ).map((apt) => (
+            <Link key={apt.id} href={`/apartments/${apt.slug}${q ? `?q=${q}` : ''}`}>
+              <Card  className='overflow-hidden'>
               {apt.featuredMedia?.url && (
                 <div className='relative w-full h-56 overflow-hidden group'>
                   <Image
@@ -185,10 +199,11 @@ export default function ApartmentsPage() {
                   </div>
                 )}
               </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
