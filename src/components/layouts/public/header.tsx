@@ -49,7 +49,7 @@ export default function PublicHeader() {
       <div className="mx-auto container">
         <nav className="flex items-center justify-between">
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 focus:outline-none border-0">
             <Image
               src={isHome
                 ? (scrolledPastViewport
@@ -59,7 +59,7 @@ export default function PublicHeader() {
               alt="Presidential Service Apartment logo"
               width={32}
               height={32}
-              className="h-12 w-auto"
+              className="h-12 w-auto focus:outline-none border-0"
             />
           </Link>
 
