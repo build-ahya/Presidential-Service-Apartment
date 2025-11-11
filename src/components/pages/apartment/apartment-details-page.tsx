@@ -94,7 +94,7 @@ export default function ApartmentDetailsPage({
       {/* Summary & Description */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
         <div className='md:col-span-1 flex flex-col gap-6'>
-          <Card>
+          <Card className='pt-6'>
             <CardHeader>
               <CardTitle>Summary</CardTitle>
               <CardDescription>Overview</CardDescription>
@@ -106,7 +106,7 @@ export default function ApartmentDetailsPage({
             </CardContent>
           </Card>
           {/* Map widget */}
-          <Card>
+          <Card className='pt-6'>
             <CardHeader>
               <CardTitle>Map</CardTitle>
               <CardDescription>
@@ -154,7 +154,7 @@ export default function ApartmentDetailsPage({
             </CardContent>
           </Card>
           {/* Rate widget */}
-          <Card className='sticky top-24'>
+          <Card className='sticky top-24 pt-6'>
             <CardHeader>
               <CardTitle>Rate</CardTitle>
               <CardDescription>Per-night pricing</CardDescription>
@@ -216,7 +216,7 @@ export default function ApartmentDetailsPage({
             </CardContent>
           </Card>
         </div>
-        <Card className='md:col-span-2'>
+        <Card className='md:col-span-2 pt-6'>
           <CardHeader>
             <CardTitle>Description</CardTitle>
             <CardDescription>About this apartment</CardDescription>
@@ -232,7 +232,7 @@ export default function ApartmentDetailsPage({
 
       {/* Amenities */}
       {apartment.amenities && apartment.amenities.length > 0 && (
-        <Card>
+        <Card className='pt-6'>
           <CardHeader>
             <CardTitle>Amenities</CardTitle>
             <CardDescription>What’s included</CardDescription>
@@ -251,7 +251,7 @@ export default function ApartmentDetailsPage({
 
       {/* Gallery */}
       {gallery.length > 0 && (
-        <Card>
+        <Card className='pt-6'>
           <CardHeader>
             <CardTitle>Gallery</CardTitle>
             <CardDescription>Photos & Videos</CardDescription>
@@ -261,7 +261,7 @@ export default function ApartmentDetailsPage({
               {gallery.map((media, idx) => (
                 <div
                   key={idx}
-                  className='relative w-full h-80 rounded-lg overflow-hidden border group'
+                  className='relative w-full h-52 md:h-80 rounded-lg overflow-hidden border group'
                 >
                   {media.type === 'image' ? (
                     <button
@@ -300,7 +300,7 @@ export default function ApartmentDetailsPage({
       )}
 
       {/* Rooms */}
-      <Card>
+      <Card className='pt-6'>
         <CardHeader>
           <CardTitle>Rooms</CardTitle>
           <CardDescription>Available suites</CardDescription>
@@ -359,7 +359,7 @@ export default function ApartmentDetailsPage({
         {(apartment.contact?.phone ||
           apartment.contact?.email ||
           apartment.contact?.website) && (
-          <Card>
+          <Card className='pt-6'>
             <CardHeader>
               <CardTitle>Contact</CardTitle>
               <CardDescription>Get in touch</CardDescription>
@@ -371,23 +371,11 @@ export default function ApartmentDetailsPage({
               {apartment.contact?.email && (
                 <div>Email: {apartment.contact.email}</div>
               )}
-              {apartment.contact?.website && (
-                <div>
-                  Website:{' '}
-                  <Link
-                    href={apartment.contact.website}
-                    target='_blank'
-                    className='underline underline-offset-4'
-                  >
-                    {apartment.contact.website}
-                  </Link>
-                </div>
-              )}
             </CardContent>
           </Card>
         )}
         {apartment.policies && (
-          <Card>
+          <Card className='pt-6'>
             <CardHeader>
               <CardTitle>Policies</CardTitle>
               <CardDescription>House rules</CardDescription>

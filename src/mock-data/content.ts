@@ -119,21 +119,16 @@ const content: Content = {
         section: 'Company',
         links: [
           { label: 'Home', href: '/' },
+          { label: 'Apartments', href: '/apartments' },
           { label: 'About', href: '/about' },
           { label: 'Blog', href: '/blog' },
           { label: 'Contact', href: '/contact' },
         ],
       },
       {
-        section: 'Explore',
-        links: [
-          { label: 'Apartments', href: '/apartments' },
-        ],
-      },
-      {
         section: 'Legal',
         links: [
-          { label: 'Terms', href: '/terms' },
+          { label: 'Terms', href: '/terms-of-service' },
           { label: 'Privacy Policy', href: '/privacy-policy' },
           { label: 'Cookie Policy', href: '/cookie-policy' },
         ],

@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const lastName = String(body?.lastName || '').trim();
     const email = String(body?.email || '').trim().toLowerCase();
     const password = String(body?.password || '');
-    const role = (body?.role || 'customer') as User['role'];
+    const role = 'customer' as User['role'];
 
     if (!firstName || !lastName || !email || !password) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });

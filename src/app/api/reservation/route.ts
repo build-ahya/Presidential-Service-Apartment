@@ -150,8 +150,8 @@ export async function POST(req: Request) {
         </div>
 
         <div class="actions">
-          <a class="btn btn--confirm" href="https://presidentialserviceapartments.ng/reservation?action=confirm">Confirm Reservation</a>
-          <a class="btn btn--cancel" href="https://presidentialserviceapartments.ng/reservation?action=cancel">Cancel Reservation</a>
+          <a class="btn btn--confirm" href="https://presidentialserviceapartments.ng/reservation?action=confirmed&reservationId=${created.id}">Confirm Reservation</a>
+          <a class="btn btn--cancel" href="https://presidentialserviceapartments.ng/reservation?action=cancelled&reservationId=${created.id}">Cancel Reservation</a>
         </div>
 
         ${
