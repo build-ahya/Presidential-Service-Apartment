@@ -1,105 +1,64 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { ContentService } from '@/services/content.service';
-import { SystemSettings } from '@/models/settings';
 import { Providers } from '@/providers';
 import './globals.css';
 
-const roboto = localFont({
-  src: [
-    {
-      path: '../../public/fonts/Roboto-Light.ttf',
-      weight: '300',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Roboto-Regular.ttf',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Roboto-Bold.ttf',
-      weight: '700',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-roboto',
+// Self-hosted variable fonts (no build-time call to Google Fonts).
+const inter = localFont({
+  src: '../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
+  weight: '100 900',
+  variable: '--font-inter',
   display: 'swap',
 });
-
+const playfair = localFont({
+  src: '../../node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2',
+  weight: '400 900',
+  variable: '--font-playfair',
+  display: 'swap',
+});
 const robotoMono = localFont({
-  src: [
-    {
-      path: '../../public/fonts/RobotoMono-Light.ttf',
-      weight: '300',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/RobotoMono-Regular.ttf',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/RobotoMono-Bold.ttf',
-      weight: '700',
-      style: 'normal',
-    },
-  ],
+  src: [{ path: '../../public/fonts/RobotoMono-Regular.ttf', weight: '400', style: 'normal' }],
   variable: '--font-roboto-mono',
   display: 'swap',
 });
 
-export async function generateMetadata() {
-  const content = await ContentService.getContent();
-
-  if (!content) {
-    return null;
-  }
-  const systemSettings = content.systemSettings || ({} as SystemSettings);
+export async function generateMetadata(): Promise<Metadata> {
+  const { systemSettings: s } = await ContentService.getContent();
+  const image = (url: string, alt?: string) => (url ? [{ url, alt }] : undefined);
 
   return {
-    title: {
-      template: `%s | ${systemSettings?.siteName}`,
-      default: systemSettings?.siteSlogan,
-    },
-    description: systemSettings?.siteDescription,
-    metadataBase: new URL(systemSettings?.siteUrl || 'http://localhost:3000'),
-    keywords: systemSettings?.siteKeywords,
-    authors: [{ name: systemSettings?.siteAuthor }],
+    title: { template: `%s | ${s.siteName}`, default: `${s.siteName} — ${s.siteSlogan}` },
+    description: s.siteDescription,
+    metadataBase: new URL(s.siteUrl || 'http://localhost:3000'),
+    keywords: s.siteKeywords,
+    authors: [{ name: s.siteAuthor }],
+    icons: s.siteIcon ? { icon: s.siteIcon } : undefined,
     openGraph: {
-      title: systemSettings?.ogTitle,
-      description: systemSettings?.ogDescription,
-      url: systemSettings?.siteUrl,
-      siteName: systemSettings?.siteName,
-      images: [
-        {
-          url: systemSettings?.ogImage || '',
-          alt: systemSettings?.ogImageAlt,
-        },
-      ],
-      locale: systemSettings?.siteLocale,
-      type: systemSettings?.siteType as any,
+      title: s.ogTitle,
+      description: s.ogDescription,
+      url: s.siteUrl,
+      siteName: s.siteName,
+      images: image(s.ogImage, s.ogImageAlt),
+      locale: s.siteLocale,
+      type: s.siteType as 'website',
     },
     twitter: {
-      card: systemSettings?.twitterCard as any,
-      title: systemSettings?.twitterTitle,
-      description: systemSettings?.twitterDescription,
-      site: systemSettings?.twitterSite,
-      creator: systemSettings?.twitterCreator,
-      images: [systemSettings?.twitterImage || ''],
+      card: s.twitterCard as 'summary_large_image',
+      title: s.twitterTitle,
+      description: s.twitterDescription,
+      site: s.twitterSite,
+      creator: s.twitterCreator,
+      images: s.twitterImage ? [s.twitterImage] : undefined,
     },
-  } as Metadata;
+  };
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='en' suppressHydrationWarning>
       <body
-        className={`${roboto.variable} ${robotoMono.variable} antialiased`}
+        className={`${inter.variable} ${playfair.variable} ${robotoMono.variable} antialiased`}
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>

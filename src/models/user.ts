@@ -1,12 +1,4 @@
-export interface UserSession {
-  deviceId: string; // Unique identifier for the device
-  deviceType: 'iOS' | 'Android' | 'Web'; // Platform type
-  deviceModel?: string; // Model of the device
-  pushNotificationToken?: string; // Unique push token for the device
-  lastActive: string; // Last time the user was active on this device
-  lastLogin?: string; // Last time the user logged in on this device
-  ipAddress?: string; // IP address of the device
-}
+export type UserRole = 'admin' | 'manager';
 
 export interface User {
   uid: string;
@@ -14,28 +6,23 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'manager' | 'member' | 'customer';
-  provider: 'password' | 'google';
+  role: UserRole;
+  provider: 'password';
+  active?: boolean;
   avatarUrl?: string;
+  /** bcrypt hash — never sent to the client. */
   password?: string;
-  resetToken?: string;
-  resetTokenExpiry?: string;
-  sessions?: UserSession[]; // Tracks multiple device sessions
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
 }
+
+export type PublicUser = Omit<User, 'password'>;
+
 export interface UserCreate {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-  phone?: string;
-  role?: 'member' | 'manager' | 'customer';
+  role: UserRole;
 }
-
-export interface UserPasswordUpdate {
-  currentPassword: string;
-  newPassword: string;
-}
-
-export type UserUpdateInput = Partial<User>;

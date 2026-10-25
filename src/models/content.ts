@@ -6,11 +6,11 @@ export interface Content {
   siteContent: SiteContent;
 }
 
+export type PageContent = { [section: string]: Section };
+
 export interface SiteContent {
-  [field: string]: {
-    // home, about, contact, etc.
-    [field: string]: Section; // section1, section2, etc.
-  };
+  // home, about, contact, etc.
+  [page: string]: PageContent;
 }
 
 export interface Button {
@@ -24,6 +24,7 @@ export interface Item {
   title: string;
   subtitle?: string;
   body: string;
+  icon?: string;
   image?: string;
   video?: string;
   thumbnail?: string;

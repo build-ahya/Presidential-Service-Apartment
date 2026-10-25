@@ -1,9 +1,11 @@
-import AdminLayout from '@/components/layouts/admin-layout';
+import type { Metadata } from 'next';
+import { AdminSessionProvider } from '@/components/admin/session-provider';
 
-export default async function Layout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <AdminLayout>{children}</AdminLayout>;
+export const metadata: Metadata = {
+  title: { template: '%s | Admin', default: 'Admin' },
+  robots: { index: false, follow: false },
+};
+
+export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
+  return <AdminSessionProvider>{children}</AdminSessionProvider>;
 }

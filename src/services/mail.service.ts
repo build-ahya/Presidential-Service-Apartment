@@ -13,6 +13,13 @@ interface EmailOptions {
   }>;
 }
 
+function fromAddress() {
+  const { MAIL_FROM, SMTP_FROM_NAME, SMTP_FROM_EMAIL, SMTP_USER } = process.env;
+  if (MAIL_FROM) return MAIL_FROM;
+  if (SMTP_FROM_EMAIL) return `${SMTP_FROM_NAME || 'Presidential Service Apartments'} <${SMTP_FROM_EMAIL}>`;
+  return SMTP_USER as string;
+}
+
 export class EmailService {
   private static transporter: Transporter;
 
@@ -36,7 +43,7 @@ export class EmailService {
       const transporter = await this.createTransporter();
 
       const mailOptions = {
-        from: `${process.env.SMTP_FROM_NAME} <${process.env.SMTP_FROM_EMAIL}>`,
+        from: fromAddress(),
         ...options,
       };
 

@@ -1,10 +1,10 @@
-export const metadata = {
-  title: 'Privacy Policy',
-  description: 'Privacy Policy for Presidential Service Apartment',
-};
+import type { Metadata } from 'next';
+import { LegalPage } from '@/components/shared/legal-page';
+import { ContentService } from '@/services/content.service';
 
-import PrivacyPolicyPage from '@/components/pages/privacy-policy';
+export const metadata: Metadata = { title: 'Privacy Policy' };
 
-export default function PrivacyPolicy() {
-  return <PrivacyPolicyPage />;
+export default async function Page() {
+  const { siteContent } = await ContentService.getContent();
+  return <LegalPage section={siteContent.privacyPolicy.main} />;
 }

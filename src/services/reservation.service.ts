@@ -1,149 +1,164 @@
-import { db, RESERVATION_COLLECTION } from '@/lib/firebase';
-import {
-  collection,
-  doc,
-  getDocs,
-  getDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-} from 'firebase/firestore';
+import 'server-only';
+import { collections } from '@/lib/firebase-admin';
+import { differenceInCalendarDays, parseISO } from 'date-fns';
 import type { Reservation, ReservationStatus } from '@/models/reservation';
-import { ApartmentService } from '@/services/apartment.service';
+import { CatalogService } from './catalog.service';
 
+const nowISO = () => new Date().toISOString();
 
-function toISO(date: Date | string | number | undefined): string | undefined {
-  if (!date) return undefined;
-  return typeof date === 'string' ? date : new Date(date).toISOString();
+/** Check-out day is free for the next guest, so ranges overlap only when they truly intersect. */
+function overlaps(aStart: string, aEnd: string, bStart: string, bEnd: string) {
+  return (
+    new Date(aStart).getTime() < new Date(bEnd).getTime() &&
+    new Date(bStart).getTime() < new Date(aEnd).getTime()
+  );
 }
 
-function nowISO() {
-  return new Date().toISOString();
-}
+const BLOCKING: ReservationStatus[] = ['confirmed'];
 
-function overlaps(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
-  const aS = new Date(aStart).getTime();
-  const aE = new Date(aEnd).getTime();
-  const bS = new Date(bStart).getTime();
-  const bE = new Date(bEnd).getTime();
-  return aS < bE && bS < aE; // overlap if ranges intersect
+export interface ReservationInput {
+  apartmentId: string;
+  checkIn: string;
+  checkOut: string;
+  guestsCount?: number;
+  guest: Reservation['guest'];
+  notes?: string;
 }
 
 export class ReservationService {
-  static async listAll(): Promise<Reservation[]> {
-    const col = collection(db, RESERVATION_COLLECTION);
-    const snapshot = await getDocs(col);
-    return snapshot.docs.map((d) => ({ ...(d.data() as Omit<Reservation, 'id'>), id: d.id }));
-  }
+  static async list(
+    params: {
+      page?: number;
+      limit?: number;
+      keyword?: string;
+      status?: ReservationStatus;
+      apartmentId?: string;
+      propertyId?: string;
+    } = {}
+  ) {
+    const { keyword, status, apartmentId, propertyId, page = 1, limit = 20 } = params;
+    const snap = await collections.reservations().get();
+    let items = snap.docs
+      .map((d) => ({ ...(d.data() as Reservation), id: d.id }))
+      .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
 
-  static async list(params?: {
-    page?: number;
-    limit?: number;
-    keyword?: string;
-    tags?: string[];
-    apartmentId?: string;
-    roomId?: string;
-    order?: 'asc' | 'desc';
-  }): Promise<{ reservations: Reservation[]; total: number }> {
-    const { keyword, tags, apartmentId, roomId, order = 'desc', page = 1, limit = 10 } = params || {};
-    const col = collection(db, RESERVATION_COLLECTION);
-    // Firestore free-text filtering is limited; fetch and filter in memory.
-    const snapshot = await getDocs(col);
-    let items = snapshot.docs
-      .map((d) => ({ ...(d.data() as Omit<Reservation, 'id'>), id: d.id }))
-      .sort((a, b) => {
-        const aT = new Date(a.createdAt || 0).getTime();
-        const bT = new Date(b.createdAt || 0).getTime();
-        return order === 'asc' ? aT - bT : bT - aT;
-      });
-
+    if (status) items = items.filter((r) => r.status === status);
     if (apartmentId) items = items.filter((r) => r.apartmentId === apartmentId);
-    if (roomId) items = items.filter((r) => r.roomId === roomId);
+    if (propertyId) items = items.filter((r) => r.propertyId === propertyId);
     if (keyword) {
       const k = keyword.toLowerCase();
-      items = items.filter(
-        (r) =>
-          r.guest?.name?.toLowerCase().includes(k) ||
-          r.guest?.email?.toLowerCase().includes(k) ||
-          r.guest?.phone?.toLowerCase().includes(k) ||
-          r.notes?.toLowerCase().includes(k)
+      items = items.filter((r) =>
+        [r.guest?.name, r.guest?.email, r.guest?.phone, r.notes].some((v) =>
+          v?.toLowerCase().includes(k)
+        )
       );
     }
-    if (tags && tags.length) {
-      items = items.filter((r) => (r.tags || []).some((t) => tags.includes(t)));
-    }
-
     const total = items.length;
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    const reservations = items.slice(start, end);
-    return { reservations, total };
+    return {
+      reservations: items.slice((page - 1) * limit, page * limit),
+      pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+    };
   }
 
   static async getById(id: string): Promise<Reservation | null> {
-    const ref = doc(db, RESERVATION_COLLECTION, id);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return null;
-    return { ...(snap.data() as Omit<Reservation, 'id'>), id: snap.id };
+    const snap = await collections.reservations().doc(id).get();
+    return snap.exists ? { ...(snap.data() as Reservation), id: snap.id } : null;
   }
 
-  static async create(payload: Omit<Reservation, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { status?: Reservation['status'] }): Promise<Reservation> {
-    const col = collection(db, RESERVATION_COLLECTION);
+  /** Public booking request. Price is always computed on the server. */
+  static async create(input: ReservationInput): Promise<Reservation> {
+    const apartment = await CatalogService.getApartmentById(input.apartmentId);
+    if (!apartment || apartment.status === 'draft') throw new Error('Apartment not found');
+
+    const nights = differenceInCalendarDays(parseISO(input.checkOut), parseISO(input.checkIn));
+    if (!Number.isFinite(nights) || nights < 1) throw new Error('Check-out must be after check-in');
+    if (input.guestsCount && input.guestsCount > apartment.maxGuests) {
+      throw new Error(`This apartment sleeps up to ${apartment.maxGuests} guests`);
+    }
+
+    const { available } = await this.checkAvailability({
+      apartmentId: apartment.id,
+      checkIn: input.checkIn,
+      checkOut: input.checkOut,
+    });
+    if (!available) throw new Error('These dates are no longer available');
+
+    const { baseRate, cleaningFee = 0, currency } = apartment.rate;
     const now = nowISO();
-    const data: Omit<Reservation, 'id'> = {
-      ...payload,
-      status: payload.status || 'pending',
+    const ref = collections.reservations().doc();
+    const data: Reservation = {
+      id: ref.id,
+      propertyId: apartment.propertyId,
+      apartmentId: apartment.id,
+      guest: input.guest,
+      checkIn: input.checkIn,
+      checkOut: input.checkOut,
+      nights,
+      guestsCount: input.guestsCount,
+      notes: input.notes,
+      status: 'pending',
+      totalAmount: baseRate * nights + cleaningFee,
+      currency,
       createdAt: now,
       updatedAt: now,
     };
-    const docRef = await addDoc(col, data as any);
-    return { ...data, id: docRef.id } as Reservation;
+    await ref.set(data);
+    return data;
   }
 
-  static async update(id: string, patch: Partial<Reservation>): Promise<Reservation | null> {
-    const ref = doc(db, RESERVATION_COLLECTION, id);
-    const existing = await getDoc(ref);
-    if (!existing.exists()) return null;
-    const next: Partial<Reservation> = { ...patch, updatedAt: nowISO() };
-    await updateDoc(ref, next as any);
-    const updated = await getDoc(ref);
-    return { ...(updated.data() as Omit<Reservation, 'id'>), id: updated.id };
+  static async update(id: string, patch: Partial<Reservation>) {
+    const ref = collections.reservations().doc(id);
+    if (!(await ref.get()).exists) return null;
+    const { id: _id, createdAt: _c, ...safe } = patch;
+    await ref.update({ ...safe, updatedAt: nowISO() });
+    return this.getById(id);
   }
 
-  static async delete(id: string): Promise<boolean> {
-    const ref = doc(db, RESERVATION_COLLECTION, id);
-    await deleteDoc(ref);
-    return true;
+  static async delete(id: string) {
+    await collections.reservations().doc(id).delete();
   }
 
+  /**
+   * Confirmed reservations block dates. Legacy reservations that were made against
+   * the whole property (no apartmentId) block every unit in that property.
+   */
   static async checkAvailability(params: {
-    apartmentId?: string;
+    apartmentId: string;
     checkIn: string;
     checkOut: string;
-  }): Promise<{ available: boolean; conflicts: Reservation[] }> {
-    const { apartmentId, checkIn, checkOut } = params;
-    // fetch all reservations
-    const col = collection(db, RESERVATION_COLLECTION);
-    const snapshot = await getDocs(col);
-    const all = snapshot.docs.map((d) => ({ ...(d.data() as Omit<Reservation, 'id'>), id: d.id }));
-    
-    // Determine apartment-level scope. For shortlet, booking covers the entire apartment.
-    const targetApartmentId: string | undefined = apartmentId;
-
-    const ACTIVE_STATUSES: ReservationStatus[] = ['confirmed'];
-
-    const scoped = targetApartmentId
-      ? all.filter((r) => r.apartmentId === targetApartmentId)
-      : all;
-
-    // Only treat confirmed reservations as conflicts; pending/cancelled/completed should not block.
-    const conflicts = scoped.filter(
-      (r) => ACTIVE_STATUSES.includes(r.status) && overlaps(r.checkIn, r.checkOut, checkIn, checkOut)
+  }) {
+    const conflicts = (await this.blockingFor(params.checkIn, params.checkOut)).filter(
+      (r) => r.apartmentId === params.apartmentId
     );
-    const available = conflicts.length === 0;
-    return { available, conflicts };
+    return { available: conflicts.length === 0, conflicts };
+  }
+
+  /** Ids of apartments that are free for the whole range. */
+  static async availableApartmentIds(params: {
+    propertyId?: string;
+    checkIn: string;
+    checkOut: string;
+  }) {
+    const [apartments, blocking] = await Promise.all([
+      CatalogService.getApartments({ propertyId: params.propertyId }),
+      this.blockingFor(params.checkIn, params.checkOut),
+    ]);
+    return apartments
+      .filter(
+        (a) =>
+          !blocking.some(
+            (r) =>
+              r.apartmentId === a.id ||
+              (!r.apartmentId && (!r.propertyId || r.propertyId === a.propertyId))
+          )
+      )
+      .map((a) => a.id);
+  }
+
+  private static async blockingFor(checkIn: string, checkOut: string) {
+    const snap = await collections.reservations().where('status', 'in', BLOCKING).get();
+    return snap.docs
+      .map((d) => ({ ...(d.data() as Reservation), id: d.id }))
+      .filter((r) => overlaps(r.checkIn, r.checkOut, checkIn, checkOut));
   }
 }

@@ -1,10 +1,10 @@
-import TermsOfServicePage from '@/components/pages/terms-of-service';
+import type { Metadata } from 'next';
+import { LegalPage } from '@/components/shared/legal-page';
+import { ContentService } from '@/services/content.service';
 
-export const metadata = {
-  title: 'Terms of Service',
-  description: 'Terms of Service for Presidential Service Apartment',
-};
+export const metadata: Metadata = { title: 'Terms of Service' };
 
-export default function TermsOfService() {
-  return <TermsOfServicePage />;
+export default async function Page() {
+  const { siteContent } = await ContentService.getContent();
+  return <LegalPage section={siteContent.terms.main} />;
 }
