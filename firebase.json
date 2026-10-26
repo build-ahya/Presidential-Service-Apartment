@@ -1,0 +1,17 @@
+{
+  "apphosting": {
+    "backendId": "presidentialserviceapartments",
+    "rootDir": "/",
+    "ignore": [
+      "node_modules",
+      ".git",
+      ".next",
+      ".env*",
+      "local.env",
+      "scripts",
+      "firebase-debug.log",
+      "firebase-debug.*.log"
+    ],
+    "alwaysDeployFromSource": true
+  }
+}

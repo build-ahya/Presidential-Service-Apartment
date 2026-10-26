@@ -3,6 +3,8 @@ import { BlogService } from '@/services/blog.service';
 import { CatalogService } from '@/services/catalog.service';
 import { ContentService } from '@/services/content.service';
 
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { systemSettings } = await ContentService.getContent();
   const baseUrl = systemSettings.siteUrl.replace(/\/$/, '');

@@ -4,6 +4,9 @@ import { SiteProvider } from '@/providers/site-provider';
 import { CatalogService } from '@/services/catalog.service';
 import { ContentService } from '@/services/content.service';
 
+// Content comes from Firestore (cached until the admin saves), so never prerender at build time.
+export const dynamic = 'force-dynamic';
+
 export const viewport: Viewport = {
   themeColor: '#0f3a6b',
 };

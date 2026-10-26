@@ -23,6 +23,8 @@ const robotoMono = localFont({
   display: 'swap',
 });
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata(): Promise<Metadata> {
   const { systemSettings: s } = await ContentService.getContent();
   const image = (url: string, alt?: string) => (url ? [{ url, alt }] : undefined);

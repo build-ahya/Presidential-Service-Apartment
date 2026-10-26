@@ -65,6 +65,7 @@ export function MediaLibrary({ mode = 'manage', multiple = false, onSelectionCha
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 
@@ -291,6 +292,7 @@ function MediaDetail({
   const [confirm, setConfirm] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAlt(asset?.alt ?? '');
     setCaption(asset?.caption ?? '');
   }, [asset]);

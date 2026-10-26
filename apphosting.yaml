@@ -1,0 +1,58 @@
+runConfig:
+  cpu: 1
+  memoryMiB: 1024
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+
+env:
+  # Firebase Admin uses the backend's service account (no key needed). FIREBASE_* names are reserved by App Hosting.
+  - variable: STORAGE_BUCKET
+    value: ayha-the-market.firebasestorage.app
+  - variable: ROOT_DATABASE_COLLECTION
+    value: websites/presidentialserviceapartments.ng
+  - variable: NEXTAUTH_URL
+    value: https://presidentialserviceapartments--ayha-the-market.us-east5.hosted.app
+    availability:
+      - RUNTIME
+  - variable: ADMIN_BOOTSTRAP_EMAIL
+    value: info@presidentialserviceapartments.ng
+    availability:
+      - RUNTIME
+  - variable: SMTP_HOST
+    value: premium800.web-hosting.com
+    availability:
+      - RUNTIME
+  - variable: SMTP_PORT
+    value: "587"
+    availability:
+      - RUNTIME
+  - variable: MAIL_FROM
+    value: "PRESIDENT SERVICE APARTMENTS <no-reply@presidentialserviceapartments.ng>"
+    availability:
+      - RUNTIME
+  # Secrets (Cloud Secret Manager)
+  - variable: JWT_ACCESS_SECRET
+    secret: presidential-jwt-access-secret
+    availability:
+      - RUNTIME
+  - variable: SMTP_USER
+    secret: presidential-smtp-user
+    availability:
+      - RUNTIME
+  - variable: SMTP_PASS
+    secret: presidential-smtp-pass
+    availability:
+      - RUNTIME
+  - variable: ADMIN_BOOTSTRAP_PASSWORD
+    secret: presidential-admin-bootstrap-password
+    availability:
+      - RUNTIME
+  - variable: PRESIDENTIAL_JWT_ACCESS_SECRET
+    secret: presidential-jwt-access-secret
+  - variable: PRESIDENTIAL_SMTP_USER
+    secret: presidential-smtp-user
+  - variable: PRESIDENTIAL_SMTP_PASS
+    secret: presidential-smtp-pass
+  - variable: PRESIDENTIAL_ADMIN_BOOTSTRAP_PASSWORD
+    secret: presidential-admin-bootstrap-password

@@ -3,6 +3,18 @@ import { cert, getApp, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore, initializeFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 
+/** App Hosting forbids env vars starting with FIREBASE_, so the bucket may come from STORAGE_BUCKET
+ *  or from the FIREBASE_CONFIG JSON that App Hosting injects automatically. */
+function storageBucketName() {
+  if (process.env.STORAGE_BUCKET) return process.env.STORAGE_BUCKET;
+  if (process.env.FIREBASE_STORAGE_BUCKET) return process.env.FIREBASE_STORAGE_BUCKET;
+  try {
+    return JSON.parse(process.env.FIREBASE_CONFIG ?? '{}').storageBucket as string | undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function adminApp() {
   if (getApps().length) return getApp();
 
@@ -24,7 +36,7 @@ function adminApp() {
         }
       : {}),
     projectId: FIREBASE_PROJECT_ID,
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    storageBucket: storageBucketName(),
   });
 }
 

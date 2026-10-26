@@ -3,20 +3,18 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { useTheme } from 'next-themes';
 import {
   BedDouble,
   Building2,
   CalendarCheck,
+  ChevronsUpDown,
   ExternalLink,
   FileText,
   Images,
   LayoutDashboard,
   LogOut,
-  Moon,
   Newspaper,
   Settings,
-  Sun,
   Users,
 } from 'lucide-react';
 import {
@@ -46,6 +44,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import Image from 'next/image';
+import React from 'react';
+import { CommandMenu } from './command-menu';
+import { ThemeToggle } from './theme-toggle';
 import type { UserRole } from '@/models/user';
 
 interface NavItem {
@@ -81,6 +91,47 @@ const NAV: { label: string; adminOnly?: boolean; items: NavItem[] }[] = [
   },
 ];
 
+const SEGMENT_LABELS: Record<string, string> = {
+  admin: 'Dashboard',
+  reservations: 'Reservations',
+  apartments: 'Apartments',
+  properties: 'Properties',
+  content: 'Pages & content',
+  blog: 'Blog',
+  media: 'Media',
+  settings: 'Settings',
+  users: 'Team',
+  new: 'New',
+};
+
+function Crumbs({ pathname }: { pathname: string }) {
+  const parts = pathname.split('/').filter(Boolean);
+  const crumbs = parts.map((seg, i) => ({
+    href: '/' + parts.slice(0, i + 1).join('/'),
+    label: SEGMENT_LABELS[seg] ?? (parts[i - 1] === 'content' ? SEGMENT_LABELS[seg] ?? seg : 'Details'),
+  }));
+  return (
+    <Breadcrumb className='hidden sm:block'>
+      <BreadcrumbList>
+        {crumbs.map((c, i) => (
+          <React.Fragment key={c.href}>
+            {i > 0 && <BreadcrumbSeparator />}
+            <BreadcrumbItem>
+              {i === crumbs.length - 1 ? (
+                <BreadcrumbPage>{c.label}</BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink asChild>
+                  <Link href={c.href}>{c.label}</Link>
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
+          </React.Fragment>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}
+
 export function AdminShell({
   user,
   siteName,
@@ -91,23 +142,25 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { resolvedTheme, setTheme } = useTheme();
   const initials = (user.name || user.email).slice(0, 2).toUpperCase();
+  const groups = NAV.filter((g) => !g.adminOnly || user.role === 'admin');
+  const commandLinks = groups.flatMap((g) => g.items.map((i) => ({ title: i.title, href: i.href, group: g.label })));
 
   return (
     <SidebarProvider>
-      <Sidebar collapsible='icon'>
+      <Sidebar collapsible='icon' variant='inset'>
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size='lg' asChild>
-                <Link href='/admin'>
-                  <span className='grid size-8 shrink-0 place-items-center rounded-lg bg-primary font-display font-bold text-primary-foreground'>
+              <SidebarMenuButton size='lg' asChild className='h-12'>
+                <Link href='/admin' aria-label={siteName}>
+                  {/* Expanded: full logo (colored on light, white on dark). Collapsed: monogram. */}
+                  <span className='hidden size-8 shrink-0 place-items-center rounded-lg bg-primary font-display font-bold text-primary-foreground group-data-[collapsible=icon]:grid'>
                     {siteName[0]}
                   </span>
-                  <span className='grid flex-1 text-left text-sm leading-tight'>
-                    <span className='truncate font-semibold'>{siteName}</span>
-                    <span className='truncate text-xs text-muted-foreground'>Admin</span>
+                  <span className='group-data-[collapsible=icon]:hidden'>
+                    <Image src='/images/presidential-service-colored-logo.svg' alt={siteName} width={813} height={211} unoptimized className='h-9 w-auto dark:hidden' />
+                    <Image src='/images/presidential-service-logo.svg' alt={siteName} width={813} height={211} unoptimized className='hidden h-9 w-auto dark:block' />
                   </span>
                 </Link>
               </SidebarMenuButton>
@@ -116,7 +169,7 @@ export function AdminShell({
         </SidebarHeader>
 
         <SidebarContent>
-          {NAV.filter((g) => !g.adminOnly || user.role === 'admin').map((group) => (
+          {groups.map((group) => (
             <SidebarGroup key={group.label}>
               <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
               <SidebarGroupContent>
@@ -150,43 +203,47 @@ export function AdminShell({
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton size='lg' className='data-[state=open]:bg-sidebar-accent'>
+                    <Avatar className='size-8 rounded-lg'>
+                      <AvatarFallback className='rounded-lg bg-primary text-xs font-semibold text-primary-foreground'>{initials}</AvatarFallback>
+                    </Avatar>
+                    <span className='grid flex-1 text-left text-sm leading-tight'>
+                      <span className='truncate font-medium'>{user.name || user.email}</span>
+                      <span className='truncate text-xs text-muted-foreground capitalize'>{user.role}</span>
+                    </span>
+                    <ChevronsUpDown className='ml-auto size-4' />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side='top' align='start' className='w-(--radix-dropdown-menu-trigger-width) min-w-56'>
+                  <DropdownMenuLabel className='truncate font-normal text-muted-foreground'>{user.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/admin/login' })}>
+                      <LogOut /> Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
 
       <SidebarInset>
-        <header className='sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/90 px-4 backdrop-blur'>
-          <SidebarTrigger />
-          <Separator orientation='vertical' className='mr-2 h-4' />
+        <header className='flex h-14 shrink-0 items-center gap-2 border-b px-4'>
+          <SidebarTrigger className='-ml-1' />
+          <Separator orientation='vertical' className='mr-1 h-4' />
+          <Crumbs pathname={pathname} />
           <div className='ml-auto flex items-center gap-1'>
-            <DropdownMenu>
-              <DropdownMenuTrigger className='flex items-center gap-2 rounded-full p-1 pr-3 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring'>
-                <Avatar className='size-8'>
-                  <AvatarFallback className='bg-secondary text-xs text-secondary-foreground'>{initials}</AvatarFallback>
-                </Avatar>
-                <span className='hidden text-left text-sm leading-tight sm:block'>
-                  <span className='block font-medium'>{user.name || user.email}</span>
-                  <span className='block text-xs text-muted-foreground capitalize'>{user.role}</span>
-                </span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end' className='w-56'>
-                <DropdownMenuLabel className='truncate font-normal text-muted-foreground'>{user.email}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
-                    {resolvedTheme === 'dark' ? <Sun /> : <Moon />}
-                    {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/admin/login' })}>
-                    <LogOut /> Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <CommandMenu links={commandLinks} />
+            <ThemeToggle />
           </div>
         </header>
-        <div className='flex-1 p-4 md:p-8'>{children}</div>
+        <div className='flex-1 p-4 md:p-6 lg:p-8'>{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
